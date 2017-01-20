@@ -1,3 +1,4 @@
+#Thanks to http://www.instructables.com/id/Plotting-real-time-data-from-Arduino-using-Python-/
 import sys, serial, argparse
 import numpy as np
 from time import sleep
