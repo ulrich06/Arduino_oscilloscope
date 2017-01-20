@@ -6,11 +6,12 @@ import json
 import matplotlib.pyplot as plt 
 import matplotlib.animation as animation
 class AnalogPlot:
-	def __init__(self, serialPort, maxLengh):
+	def __init__(self, serialPort, channel, maxLengh):
 		self.ser = serial.Serial(serialPort, 9600)
 		self.ax = deque([0.0]*maxLengh)
 		self.ay = deque([0.0]*maxLengh)
 		self.maxLen = maxLengh
+		self.channel = channel
 
 	def addToBuf(self, buf, val):
 		if len(buf) < self.maxLen:
@@ -20,6 +21,7 @@ class AnalogPlot:
 			buf.appendleft(val)
 
 	def add(self, data):
+		print data
 		self.addToBuf(self.ax, data['time'])
 		self.addToBuf(self.ay, data['value'])
 
@@ -29,10 +31,10 @@ class AnalogPlot:
 			
 			line = json.loads(message)
           	# print data
-			if(line['channel'] == 'channel_a'):
+			if(line['channel'] == self.channel):
 				self.add(line)
 		#		a0.set_data(range(self.maxLen), self.ax)
-				a1.set_data(self.ax, self.ay)
+				a0.set_data(self.ax, self.ay)
 		except KeyboardInterrupt:
 			print('exiting')
 		return a0, 
@@ -45,13 +47,21 @@ class AnalogPlot:
 def main():
 	parser = argparse.ArgumentParser(description="LDR serial")
 	parser.add_argument('--port', dest='port', required=True)
+	parser.add_argument('--channel', dest='channel', required=True)
+
 	args = parser.parse_args()
 	serialPort = args.port
+	channel = args.channel
 
-	analogPlotter = AnalogPlot(serialPort,5000)
+	print(channel)
+
+	analogPlotter = AnalogPlot(serialPort,channel,5000)
 
 	fig = plt.figure()
-	ax = plt.axes(xlim=(0,500), ylim=(0,1023))
+	if(channel == "channel_a"):
+		ax = plt.axes(xlim=(0,2000), ylim=(0,1023))
+	else:
+		ax = plt.axes(xlim=(0,2000), ylim=(0,1))
 	a0, = ax.plot([], [])
   	a1, = ax.plot([], [])
   	anim = animation.FuncAnimation(fig, analogPlotter.update, fargs=(a0,a1), interval=50)
