@@ -5,14 +5,22 @@ from collections import deque
 import json
 import matplotlib.pyplot as plt 
 import matplotlib.animation as animation
+import datetime  
+import time
+
 class AnalogPlot:
-	def __init__(self, serialPort, channel, maxLengh):
+	def __init__(self, serialPort, channel, logging, maxLengh):
 		self.ser = serial.Serial(serialPort, 9600)
 		self.ax = deque([0.0]*maxLengh)
 		self.ay = deque([0.0]*maxLengh)
 		self.maxLen = maxLengh
 		self.channel = channel
-
+		self.logging = logging
+		if (logging):
+			now = datetime.datetime.now()
+			timestamp = int(time.mktime(now.timetuple()))
+			self.file_object = open("raw_"+channel+"_"+str(timestamp)+".csv", "w")
+	
 	def addToBuf(self, buf, val):
 		if len(buf) < self.maxLen:
 			buf.append(val)
@@ -32,8 +40,9 @@ class AnalogPlot:
 			line = json.loads(message)
           	# print data
 			if(line['channel'] == self.channel):
+				if(self.logging):
+					self.file_object.write(str(line['value']) + "," + str(line['time']) + "\n")
 				self.add(line)
-		#		a0.set_data(range(self.maxLen), self.ax)
 				a0.set_data(self.ax, self.ay)
 		except KeyboardInterrupt:
 			print('exiting')
@@ -45,17 +54,16 @@ class AnalogPlot:
 		self.ser.close()    
 
 def main():
-	parser = argparse.ArgumentParser(description="LDR serial")
-	parser.add_argument('--port', dest='port', required=True)
-	parser.add_argument('--channel', dest='channel', required=True)
-
+	parser = argparse.ArgumentParser(description="Digital/Analogic oscilloscope")
+	parser.add_argument('--port', dest='port', required=True, help="Serial port to use")
+	parser.add_argument('--channel', dest='channel', required=True, help='choose which channel to draw in [channel_1, channel_2, channel_3, channel_a]')
+	parser.add_argument("--log", dest="log", required=False, type=bool, default=False, help='log raw data into a file')
 	args = parser.parse_args()
 	serialPort = args.port
 	channel = args.channel
+	logging = args.log
 
-	print(channel)
-
-	analogPlotter = AnalogPlot(serialPort,channel,5000)
+	analogPlotter = AnalogPlot(serialPort,channel, logging, 5000)
 
 	fig = plt.figure()
 	if(channel == "channel_a"):
