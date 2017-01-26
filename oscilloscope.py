@@ -57,7 +57,7 @@ class AnalogPlot:
 def main():
 	parser = argparse.ArgumentParser(description="Digital/Analogic oscilloscope")
 	parser.add_argument('--port', dest='port', required=True, help="Serial port to use")
-	parser.add_argument('--channel', dest='channel', required=True, help='choose which channel to draw in [channel_1, channel_2, channel_3, channel_a]')
+	parser.add_argument('--channel', dest='channel', required=True, help='choose which channel to draw in [channel_1, channel_2, channel_3, channel_a, channel_v]')
 	parser.add_argument("--log", dest="log", required=False, type=bool, default=False, help='log raw data into a file')
 	args = parser.parse_args()
 	serialPort = args.port
@@ -69,6 +69,8 @@ def main():
 	fig = plt.figure()
 	if(channel == "channel_a"):
 		ax = plt.axes(xlim=(0,2000), ylim=(0,1023))
+	elif(channel == "channel_v"):
+		ax = plt.axes(xlim=(0,5000), ylim=(0,5100))
 	else:
 		ax = plt.axes(xlim=(0,2000), ylim=(0,1))
 	a0, = ax.plot([], [])
